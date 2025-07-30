@@ -4,13 +4,17 @@ local g = vim.g
 --------------------------------- options --------------------------------------
 
 vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
 -- Indenting
 o.expandtab = true
-o.shiftwidth = 2
 o.smartindent = true
 o.tabstop = 2
+o.shiftwidth = 2
 o.softtabstop = 2
+
+o.list = true -- show trailing characters
+o.signcolumn = "yes"
 
 o.number = true;
 o.relativenumber = true;
@@ -20,26 +24,59 @@ o.colorcolumn = "80"
 o.relativenumber = true
 o.termguicolors = true
 
+o.winborder = "rounded"
+o.undofile = true
+o.ignorecase = true
+o.smartcase = true
+
 --------------------------------- plugins --------------------------------------
 
 vim.pack.add({
-  { src = "https://github.com/neovim/nvim-lspconfig" },
+  { src = "https://github.com/christoomey/vim-tmux-navigator" },
+  { src = "https://github.com/numToStr/Comment.nvim" },
+  { src = "https://github.com/nvim-tree/nvim-web-devicons" },
   { src = "https://github.com/nvim-lua/plenary.nvim" },
   { src = "https://github.com/sharkdp/fd" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = 'main' },
-  { src = "https://github.com/nvim-telescope/telescope.nvim", tag = "0.1.8" },
-
-
-  { src =     "https://github.com/stevearc/conform.nvim" },
-
+  { src = "https://github.com/neovim/nvim-lspconfig" },
+  { src = "https://github.com/nvim-telescope/telescope.nvim",   tag = "0.1.8" },
+  { src = "https://github.com/catppuccin/nvim",                 priority = 1000, },
 })
 
-vim.lsp.enable({"lua_ls", "clangd"})
+vim.cmd.colorscheme "catppuccin"
+vim.lsp.enable({ "lua_ls", "clangd" })
+
+local autocmd = vim.api.nvim_create_autocmd
+
+autocmd("PackChanged", { -- update treesitter parsers/queries with plugin updates
+  group = augroup,
+  callback = function(args)
+    local spec = args.data.spec
+    if spec and spec.name == "nvim-treesitter" and args.data.kind == "update" then
+      vim.schedule(function()
+        nts.update()
+      end)
+    end
+  end,
+})
+
+autocmd("FileType", { -- enable treesitter highlighting and indents
+  callback = function(args)
+    local filetype = args.match
+    local lang = vim.treesitter.language.get_lang(filetype)
+    if vim.treesitter.language.add(lang) then
+      vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      vim.treesitter.start()
+    end
+  end
+})
 
 --------------------------------- mappings -------------------------------------
 
 local builtin = require "telescope.builtin"
 local map = vim.keymap.set
+
+map('n', "<leader>fm", vim.lsp.buf.format);
 
 map("n", "<leader>e", "<cmd>Ex<CR>", { desc = "See currect directory" })
 
