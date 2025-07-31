@@ -112,8 +112,8 @@ require("telescope").setup {
   extensions = {},
 }
 
---------------------------------- Nvim CMP -------------------------------------
----
+--------------------------------- Conform -------------------------------------
+
 require("conform").setup {
   formatters_by_ft = {
     lua = { "stylua" },
@@ -194,12 +194,16 @@ cmp.setup {
   },
 }
 
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
-for _, lsp_name in ipairs(ls) do
-  require("lspconfig")[lsp_name].setup {
-    capabilities = capabilities,
-  }
-end
+local lspconfig_defaults = require("lspconfig").util.default_config
+lspconfig_defaults.capabilities = vim.tbl_deep_extend(
+  "force",
+  lspconfig_defaults.capabilities,
+  require("cmp_nvim_lsp").default_capabilities()
+)
+
+-- for name, opts in pairs(ls) do
+--   require("lspconfig")[name].setup(opts)
+-- end
 
 --------------------------------- Autocmd -------------------------------------
 
@@ -216,36 +220,55 @@ autocmd("FileType", { -- enable treesitter highlighting and indents
   end,
 })
 
+local set = vim.keymap.set
+
+autocmd("LspAttach", {
+  desc = "LSP actions",
+  callback = function(event)
+    local opts = { buffer = event.buf }
+
+    set("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", opts)
+    set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<cr>", opts)
+    set("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<cr>", opts)
+    set("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<cr>", opts)
+    set("n", "go", "<cmd>lua vim.lsp.buf.type_definition()<cr>", opts)
+    set("n", "gr", "<cmd>lua vim.lsp.buf.references()<cr>", opts)
+    set("n", "gs", "<cmd>lua vim.lsp.buf.signature_help()<cr>", opts)
+    set("n", "ge", "<cmd>lua vim.lsp.buf.rename()<cr>", opts)
+    set("n", "ga", "<cmd>lua vim.lsp.buf.code_action()<cr>", opts)
+  end,
+})
+
 --------------------------------- Harpoon --------------------------------------
 
 local harpoon = require "harpoon"
 harpoon:setup()
 
-vim.keymap.set("n", "<leader>a", function()
+set("n", "<leader>a", function()
   harpoon:list():add()
 end)
-vim.keymap.set("n", "<C-e>", function()
+set("n", "<A-e>", function()
   harpoon.ui:toggle_quick_menu(harpoon:list())
 end)
 
-vim.keymap.set("n", "<C-h>", function()
+set("n", "<A-h>", function()
   harpoon:list():select(1)
 end)
-vim.keymap.set("n", "<C-t>", function()
+set("n", "<A-j>", function()
   harpoon:list():select(2)
 end)
-vim.keymap.set("n", "<C-n>", function()
+set("n", "<A-k>", function()
   harpoon:list():select(3)
 end)
-vim.keymap.set("n", "<C-s>", function()
+set("n", "<A-l>", function()
   harpoon:list():select(4)
 end)
 
 -- Toggle previous & next buffers stored within Harpoon list
-vim.keymap.set("n", "<A-p>", function()
+set("n", "<A-p>", function()
   harpoon:list():prev()
 end, { desc = "Harpoon: Previous file" })
-vim.keymap.set("n", "<A-n>", function()
+set("n", "<A-n>", function()
   harpoon:list():next()
 end, { desc = "Harpoon: Next file" })
 
