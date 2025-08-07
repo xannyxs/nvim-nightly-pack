@@ -272,6 +272,16 @@ set("n", "<A-n>", function()
   harpoon:list():next()
 end, { desc = "Harpoon: Next file" })
 
+--------------------------------- Custom Cmds ----------------------------------
+
+local usrcmd = vim.api.nvim_create_user_command
+
+usrcmd("PackUpdate", function()
+  vim.pack.update()
+end, {
+  desc = "Update all Neovim packages (vim.pack)",
+})
+
 --------------------------------- mappings -------------------------------------
 
 local builtin = require "telescope.builtin"
